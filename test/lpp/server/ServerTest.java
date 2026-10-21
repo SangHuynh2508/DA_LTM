@@ -39,7 +39,39 @@ public class ServerTest {
     public static void main(String[] args) throws Exception {
         mainFlow();
         heartbeatAndHostDrop();
+        stuckClientDoesNotFreezeRoom();
         System.out.println("ServerTest OK");
+    }
+
+    /** Client vẫn gửi PING nhưng không bao giờ đọc → bộ đệm gửi đầy; phòng không được đóng băng. */
+    static void stuckClientDoesNotFreezeRoom() throws Exception {
+        LppServer server = new LppServer(msg -> { }, 300);
+        server.start(0);
+        try (Raw host = new Raw(server.port()); Raw stuck = new Raw(server.port())) {
+            String code = Protocol.decode(host.send("CREATE_ROOM").read())[1];
+            stuck.send("JOIN|" + code + "|Treo");
+            host.read(); // JOINED|Treo
+
+            Thread pinger = new Thread(() -> {
+                try { while (true) { stuck.send("PING"); Thread.sleep(50); } } catch (Exception ignored) { }
+            });
+            Thread drainHost = new Thread(() -> {
+                try { while (host.read() != null) { } } catch (IOException ignored) { }
+            });
+            String big = "x".repeat(4000);
+            Thread flood = new Thread(() -> {
+                // gửi liên tục để chính Host không bị timeout 300 ms
+                try { for (int i = 1; ; i++) host.send("OPEN_POLL|" + i + "|" + big + "|a|b"); } catch (IOException ignored) { }
+            });
+            for (Thread t : new Thread[]{pinger, drainHost, flood}) { t.setDaemon(true); t.start(); }
+            Thread.sleep(1500);
+
+            try (Raw fresh = new Raw(server.port())) {
+                String got = fresh.send("JOIN|" + code + "|Moi").read();
+                check(("JOIN_OK|" + code).equals(got),
+                        "phòng vẫn nhận người mới khi có một Client không đọc socket, nhận: " + got);
+            }
+        }
     }
 
     static void mainFlow() throws Exception {

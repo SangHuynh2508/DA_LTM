@@ -11,13 +11,25 @@ import java.io.Writer;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /** Phục vụ một kết nối TCP (Host hoặc Client) trên một luồng riêng. Vai trò do lệnh đầu tiên quyết định. */
 final class ClientHandler implements Runnable, Peer {
     private enum Role { NONE, HOST, CLIENT }
 
+    /** Ghi socket không có timeout; luồng này đóng socket nếu một lần ghi kẹt quá lâu (Client không đọc). */
+    private static final ScheduledExecutorService WATCHDOG = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "write-watchdog");
+        t.setDaemon(true);
+        return t;
+    });
+
     private final Socket socket;
+    private final int writeTimeoutMs;
     private final BufferedReader in;
     private final Writer out;
     private final RoomManager rooms;
@@ -33,7 +45,8 @@ final class ClientHandler implements Runnable, Peer {
         this.log = log;
         this.who = socket.getRemoteSocketAddress().toString();
         socket.setSoTimeout(timeoutMs);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        this.writeTimeoutMs = timeoutMs / 3; // 5 s với timeout 15 s
+        in =new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
     }
 
@@ -118,12 +131,15 @@ final class ClientHandler implements Runnable, Peer {
     }
 
     @Override public synchronized void send(String line) {
+        ScheduledFuture<?> killer = WATCHDOG.schedule(this::close, writeTimeoutMs, TimeUnit.MILLISECONDS);
         try {
             out.write(line);
             out.write('\n');
             out.flush();
         } catch (IOException e) {
             close();
+        } finally {
+            killer.cancel(false);
         }
     }
 

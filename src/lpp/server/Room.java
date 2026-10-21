@@ -10,7 +10,8 @@ import java.util.Map;
 /**
  * Một phòng poll. Mọi method public đều synchronized → khoá theo từng phòng.
  * Broadcast thực hiện trong khoá để thứ tự RESULT đến Host luôn đúng.
- * ponytail: một Client treo làm đầy bộ đệm gửi sẽ làm chậm cả phòng; nâng cấp = hàng đợi gửi riêng mỗi kết nối.
+ * ponytail: một Client không đọc socket làm cả phòng chờ tới khi watchdog của ClientHandler cắt nó (timeout/3 = 5 s);
+ * nâng cấp = hàng đợi gửi riêng mỗi kết nối.
  */
 final class Room {
     static final int MAX_NAME = 20, MIN_OPTIONS = 2, MAX_OPTIONS = 6;
