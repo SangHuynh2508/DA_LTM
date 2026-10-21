@@ -54,6 +54,7 @@ public final class HostApp {
     private boolean ending;
     private int nextPollId = 1;
     private int openPollId = -1;
+    private int[] lastCounts;                                         // RESULT gần nhất của câu đang mở
     private final Map<Integer, String[]> polls = new HashMap<>(); // id → {câu hỏi, lựa chọn...}
     private final List<String[]> history = new ArrayList<>();      // {câu hỏi, lựa chọn, số phiếu}
 
@@ -128,7 +129,10 @@ public final class HostApp {
             case "LEFT" -> { people.removeElement(f[1]); updateOnline(); }
             case "RESULT" -> {
                 int id = Integer.parseInt(f[1]);
-                if (id == openPollId) showChart(id, counts(f), "");
+                if (id == openPollId) {
+                    lastCounts = counts(f);
+                    showChart(id, lastCounts, "");
+                }
             }
             case "POLL_CLOSED" -> {
                 int id = Integer.parseInt(f[1]);
@@ -143,6 +147,8 @@ public final class HostApp {
             }
             case "ROOM_ENDED" -> {
                 exportCsv();
+                history.clear(); // đã xuất; onClosed sắp chạy không xuất lại
+                openPollId = -1;
                 conn.close();
             }
             case "ERROR" -> error(f.length > 2 ? f[2] : String.join("|", f));
@@ -151,7 +157,19 @@ public final class HostApp {
     }
 
     private void onClosed() {
-        if (!ending) error("Mất kết nối server");
+        // câu đang mở chưa có POLL_CLOSED: giữ số phiếu cuối cùng nhận được
+        if (openPollId != -1 && lastCounts != null) {
+            String[] p = polls.get(openPollId);
+            for (int i = 0; i < lastCounts.length; i++) {
+                history.add(new String[]{p[0] + " (chưa đóng)", p[i + 1], String.valueOf(lastCounts[i])});
+            }
+        }
+        if (!history.isEmpty()) {
+            error("Mất kết nối server. Hãy lưu kết quả đã thu được.");
+            exportCsv();
+        } else if (!ending) {
+            error("Mất kết nối server");
+        }
         resetUi();
     }
 
@@ -164,6 +182,7 @@ public final class HostApp {
             return;
         }
         openPollId = nextPollId++;
+        lastCounts = null;
         String[] p = new String[opts.length + 1];
         p[0] = q;
         System.arraycopy(opts, 0, p, 1, opts.length);
