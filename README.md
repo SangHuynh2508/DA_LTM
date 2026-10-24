@@ -40,6 +40,13 @@ Console Windows hiện tiếng Việt thành `?`: thêm `-Dstdout.encoding=UTF-8
 java -cp out lpp.common.ProtocolTest && java -cp out lpp.server.RoomTest && java -cp out lpp.server.ServerTest && java -cp out lpp.server.DiscoveryTest
 ```
 
+## Gửi cho người khác test
+
+```bash
+sh dist.sh
+```
+Tạo `dist/LivePolling.zip` gồm `Server.jar`, `Host.jar`, `Client.jar` (double-click để chạy, máy cần Java 17+) và `HUONG_DAN_TEST.txt` (các bước + danh sách cần thử).
+
 ## Gửi lệnh bằng tay (telnet)
 
 ```bash

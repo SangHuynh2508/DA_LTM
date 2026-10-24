@@ -1,0 +1,39 @@
+HƯỚNG DẪN TEST – HỆ THỐNG BÌNH CHỌN TRỰC TUYẾN (LPP)
+=====================================================
+
+CẦN CÓ
+- Java 17 trở lên trên mọi máy. Kiểm tra: mở cmd, gõ  java -version
+  Chưa có thì cài "Temurin 17 JRE" tại https://adoptium.net
+- Các máy cùng một mạng (cùng Wi-Fi hoặc cùng LAN). Wi-Fi công cộng/trường học
+  thường chặn máy nói chuyện với nhau -> dùng điểm phát 4G từ điện thoại là chắc ăn nhất.
+- Tắt VPN (Radmin, Hamachi, ...) nếu có, kẻo Client tìm nhầm địa chỉ.
+
+FILE
+- Server.jar : chạy trên MỘT máy (máy chủ).
+- Host.jar   : người tạo phòng, đặt câu hỏi (có thể chạy cùng máy với Server).
+- Client.jar : mỗi người tham gia chạy một bản.
+Double-click file .jar để mở. Nếu double-click không chạy, mở cmd tại thư mục này và gõ:
+    java -jar Server.jar
+
+CÁC BƯỚC
+1. Máy chủ mở Server.jar. Lần đầu Windows Firewall hỏi -> tích "Private networks" -> Allow.
+   Cửa sổ Server hiện IP của máy (ví dụ 192.168.1.10) – báo IP này cho mọi người.
+2. Host mở Host.jar, nhập IP server (cùng máy thì để localhost), bấm "Kết nối & tạo phòng".
+   Màn hình hiện Mã phòng 6 ký tự – đọc mã này cho mọi người.
+3. Mỗi người mở Client.jar, bấm "Tìm server" (hoặc tự nhập IP), nhập Mã phòng và Tên, bấm "Vào phòng".
+4. Host gõ câu hỏi, các lựa chọn (mỗi dòng một, 2-6 dòng), bấm "Mở câu hỏi".
+5. Client chọn đáp án. Biểu đồ của Host và mọi Client cập nhật ngay.
+6. Host bấm "Đóng câu hỏi", rồi có thể mở câu tiếp theo.
+7. Cuối buổi Host bấm "Kết thúc & xuất CSV" để lưu kết quả.
+
+DANH SÁCH CẦN THỬ (ghi Đạt / Không đạt, kèm ảnh chụp nếu lỗi)
+[ ] "Tìm server" tự thấy máy chủ
+[ ] Nhập sai mã phòng -> báo lỗi
+[ ] Hai người cùng tên vào một phòng -> người sau bị báo trùng tên
+[ ] Đổi đáp án khi câu hỏi còn mở -> số phiếu chuyển đúng, không bị cộng 2 lần
+[ ] Chọn sau khi Host đóng câu hỏi -> bị từ chối
+[ ] Người vào phòng giữa chừng vẫn thấy câu hỏi đang mở
+[ ] Tắt hẳn một Client (hoặc rút mạng) -> sau khoảng 15 giây Host thấy người đó rời phòng
+[ ] Host kết thúc phòng -> mọi Client nhận thông báo
+[ ] Tắt Server khi đang chạy -> Host được hỏi lưu CSV kết quả đã có
+[ ] File CSV mở được bằng Excel, đúng số phiếu
