@@ -15,11 +15,14 @@ File → Open Project → chọn thư mục `DA_LTM` (NetBeans nhận ra `pom.xm
 Git Bash:
 ```bash
 javac --release 17 -encoding UTF-8 -d out $(find src test -name '*.java')
+cp -r src/lpp/common/fonts out/lpp/common/
 ```
 PowerShell:
 ```powershell
 javac --release 17 -encoding UTF-8 -d out (Get-ChildItem -Recurse -Filter *.java src,test).FullName
+Copy-Item -Recurse src/lpp/common/fonts out/lpp/common/
 ```
+Bước chép font chỉ để giao diện dùng Be Vietnam Pro (giấy phép OFL, xem `src/lpp/common/fonts/OFL.txt`); thiếu font thì chương trình tự dùng font hệ thống.
 
 ## Chạy
 

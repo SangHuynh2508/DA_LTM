@@ -22,5 +22,12 @@
     <build>
         <sourceDirectory>src</sourceDirectory>
         <testSourceDirectory>test</testSourceDirectory>
+        <!-- font giao diện nằm cạnh mã nguồn: src/lpp/common/fonts -->
+        <resources>
+            <resource>
+                <directory>src</directory>
+                <excludes><exclude>**/*.java</exclude></excludes>
+            </resource>
+        </resources>
     </build>
 </project>

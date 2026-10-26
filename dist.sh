@@ -4,6 +4,7 @@
 set -e
 rm -rf out dist && mkdir -p dist
 javac --release 17 -encoding UTF-8 -d out $(find src -name '*.java')
+cp -r src/lpp/common/fonts out/lpp/common/   # font Be Vietnam Pro đóng vào jar
 for app in Server:lpp.server.ServerFrame Host:lpp.host.HostApp Client:lpp.client.ClientApp; do
     jar --create --file "dist/${app%%:*}.jar" --main-class "${app#*:}" -C out .
 done
